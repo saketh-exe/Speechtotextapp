@@ -10,7 +10,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     <nav className="border-t border-border bg-card flex items-center justify-around h-16">
       <button
         onClick={() => onTabChange("home")}
-        className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${
+        className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors cursor-pointer ${
           activeTab === "home" ? "text-accent" : "text-muted-foreground"
         }`}
       >
@@ -20,7 +20,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
       
       <button
         onClick={() => onTabChange("saves")}
-        className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${
+        className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors cursor-pointer ${
           activeTab === "saves" ? "text-accent" : "text-muted-foreground"
         }`}
       >
@@ -30,7 +30,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
       
       <button
         onClick={() => onTabChange("chatbot")}
-        className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${
+        className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors cursor-pointer ${
           activeTab === "chatbot" ? "text-accent" : "text-muted-foreground"
         }`}
       >

@@ -100,7 +100,7 @@ export function Home() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-x-hidden">
       {/* Main Recording Area */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="text-center mb-12">
@@ -138,7 +138,7 @@ export function Home() {
             onMouseDown={handleMouseDown}
             onTouchStart={handleMouseDown}
             onClick={isLocked ? handleStopRecording : undefined}
-            className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-all shadow-lg ${
+            className={`relative w-48 h-48 rounded-full flex items-center justify-center transition-all shadow-lg ${
               isRecording
                 ? "bg-accent scale-110"
                 : "bg-accent/10"

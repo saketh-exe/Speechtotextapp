@@ -8,7 +8,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<"home" | "saves" | "chatbot">("home");
 
   return (
-    <div className="size-full flex flex-col bg-background max-w-md mx-auto">
+    <div className="size-full flex flex-col bg-[#fee9c4] max-w-md mx-auto h-screen">
       <div className="flex-1 overflow-y-auto">
         {activeTab === "home" && <Home />}
         {activeTab === "saves" && <Saves />}

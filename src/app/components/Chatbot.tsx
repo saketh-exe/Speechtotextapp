@@ -114,7 +114,7 @@ export function Chatbot() {
             className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}
           >
             <div
-              className={`p-2 rounded-full shrink-0 ${
+              className={`p-2 rounded-full h-min ${
                 message.role === "user" 
                   ? "bg-accent text-accent-foreground" 
                   : "bg-muted"
