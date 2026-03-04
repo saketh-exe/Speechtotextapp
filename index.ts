@@ -16,7 +16,7 @@ app.post(
 );
 
 app.get('/', (req: Request, res: Response) => {
-  console.log("smt")
+  console.log("running")
   res.send('The speech to text API is running!');
 });
 
