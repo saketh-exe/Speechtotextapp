@@ -8,7 +8,7 @@ import { makeStyles } from '../styles/HomeStyles';
 import { useNavBar } from '@/context/NavContext';
 import { useAppTheme } from '@/hooks/useAppTheme';
 
-const BACKEND_URL = 'http://192.168.0.100:3000/api/speech-to-text/';
+const BACKEND_URL = 'http://10.195.103.1:3000/api/speech-to-text/';
 
 export default function HomeScreen() {
   const { setIsScrolled } = useNavBar();
