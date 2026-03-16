@@ -1,15 +1,17 @@
-import { ScrollView, Text, View, TouchableOpacity, ActivityIndicator, Animated, Easing, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { ScrollView, Text, View, TouchableOpacity, ActivityIndicator, Animated, Easing, NativeSyntheticEvent, NativeScrollEvent, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef } from 'react';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import * as Haptics from 'expo-haptics';
-import { useAudioRecorder, useAudioPlayer, AudioModule, RecordingPresets } from 'expo-audio';
+import { useAudioRecorder, useAudioPlayer, useAudioPlayerStatus, AudioModule, RecordingPresets } from 'expo-audio';
 import { makeStyles } from '../styles/HomeStyles';
 import { useNavBar } from '@/context/NavContext';
 import { useAppTheme } from '@/hooks/useAppTheme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Directory,Paths, File as ExpoFile} from 'expo-file-system';
 
-const BACKEND_URL = 'http://10.195.103.1:3000/api/speech-to-text/';
-
+const BACKEND_URL = 'http://192.168.0.100:3000/api/speech-to-text/';
+const STORAGE_KEY = 'AUDIO_AND_TRANSCRIPTIONS';
 export default function HomeScreen() {
   const { setIsScrolled } = useNavBar();
   const { palette } = useAppTheme();
@@ -19,14 +21,14 @@ export default function HomeScreen() {
   const [error, setError] = useState('');
   const [recordedUri, setRecordedUri] = useState<string | null>(null);
   const [isAvRecording, setIsAvRecording] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     setIsScrolled(e.nativeEvent.contentOffset.y > 60);
   };
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const audioPlayer = useAudioPlayer();
+  const audioPlayer = useAudioPlayer(undefined, { updateInterval: 100 });
+  const playerStatus = useAudioPlayerStatus(audioPlayer);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -56,20 +58,16 @@ export default function HomeScreen() {
   useEffect(() => {
     fetch(BACKEND_URL.replace('/api/speech-to-text/', '/'))
       .then((res) => res.text())
-      .then((text) => console.log('Backend says:', text))
+      .then((text) => console.log("ntg"))
       .catch((err) => console.error('Backend ping failed:', err));
   }, []);
 
   useEffect(() => {
-    const sub = audioPlayer.addListener('playbackStatusUpdate', (status: any) => {
-      if (status.didJustFinish) {
-        setIsPlaying(false);
-        audioPlayer.seekTo(0);
-        audioPlayer.pause();
-      }
-    });
-    return () => sub.remove();
-  }, [audioPlayer]);
+    if (playerStatus.didJustFinish) {
+      audioPlayer.seekTo(0);
+      audioPlayer.pause();
+    }
+  }, [playerStatus.didJustFinish, audioPlayer]);
 
   const handleAvStart = async () => {
     try {
@@ -108,12 +106,10 @@ export default function HomeScreen() {
 
   const handlePlayback = () => {
     try {
-      if (isPlaying) {
+      if (playerStatus.playing) {
         audioPlayer.pause();
-        setIsPlaying(false);
       } else {
         audioPlayer.play();
-        setIsPlaying(true);
       }
     } catch {
       setError('Could not play recording.');
@@ -122,37 +118,97 @@ export default function HomeScreen() {
 
   const handleSendToBackend = async () => {
     if (!recordedUri) return;
+    const controller = new AbortController();
+    // Allow up to 5 minutes — long recordings take time to transcribe on CPU
+    const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
     try {
       setIsLoading(true);
       audioPlayer.pause();
-      setIsPlaying(false);
-
       const formData = new FormData();
-      formData.append('audio', {
-        uri: recordedUri,
-        name: 'recording.m4a',
-        type: 'audio/m4a',
-      } as any);
+      
+      let webBlob: Blob | null = null;
+      if (Platform.OS === 'web') {
+        const audioResponse = await fetch(recordedUri);
+        webBlob = await audioResponse.blob();
+        const file = new File([webBlob], 'recording.m4a', { type: webBlob.type || 'audio/m4a' });
+        formData.append('audio', file);
+      } else {
+        formData.append('audio', {
+          uri: recordedUri,
+          name: 'recording.m4a',
+          type: 'audio/m4a',
+        } as any);
+      }
 
       const response = await fetch(BACKEND_URL, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
 
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+      if (!response.ok) {
+        const errBody = await response.text().catch(() => '');
+        throw new Error(`Server error ${response.status}${errBody ? ': ' + errBody : ''}`);
+      }
       const data = await response.json();
       setTranscript(data.transcript ?? 'No transcription returned.');
+
+      /*
+        ***********************
+        Storage Logic
+        ***********************
+
+      */
+      let prev = await AsyncStorage.getItem(STORAGE_KEY);
+      if (prev == null) prev = '[]';
+      let temp = JSON.parse(prev);
+      const fileNameId = `recording_${Date.now()}`;
+
+      if (Platform.OS !== 'web') {
+        const directory = new Directory(Paths.document, "Recordings");
+        if(directory.exists === false) directory.create()
+
+        const fileName = `${fileNameId}.m4a`;
+
+        const destination = new ExpoFile(directory, fileName);
+       
+        const source = new ExpoFile(recordedUri)
+        source.copy(destination)
+
+        temp.push({ uri: destination.uri, transcript: data.transcript });
+      } else if (webBlob) {
+        // Save the actual blob in IndexedDB for web
+        const localforage = require('localforage');
+        const idbKey = `web_audio_${fileNameId}`;
+        await localforage.setItem(idbKey, webBlob);
+        
+        // Save the indexedDB key as a custom scheme URI marker
+        temp.push({ uri: `idb://${idbKey}`, transcript: data.transcript });
+      }
+
+      /*
+      *************************
+      Storage Logic Ends
+      *************************
+      */
+      
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(temp));
       setRecordedUri(null);
-    } catch {
-      setError('Failed to transcribe audio.');
+    } catch (err: any) {
+      if (err?.name === 'AbortError') {
+        setError('Transcription timed out. Try a shorter recording.');
+      } else {
+        console.error('Transcription error:', err);
+        setError(`Transcription failed: ${err?.message ?? 'Unknown error'}`);
+      }
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
 
   const handleDiscard = () => {
     audioPlayer.pause();
-    setIsPlaying(false);
     setRecordedUri(null);
     setTranscript('');
     setError('');
@@ -217,12 +273,12 @@ export default function HomeScreen() {
                   activeOpacity={0.8}
                 >
                   <IconSymbol
-                    name={isPlaying ? 'pause.fill' : 'play.fill'}
+                    name={playerStatus.playing ? 'pause.fill' : 'play.fill'}
                     size={20}
                     color= {palette.icon}
                   />
                   <Text style={S.previewButtonText}>
-                    {isPlaying ? 'Pause' : 'Play'}
+                    {playerStatus.playing ? 'Pause' : 'Play'}
                   </Text>
                 </TouchableOpacity>
 

@@ -11,37 +11,38 @@ if (!fs.existsSync(PROCESSING_DIR)) {
 }
 
 /**
- * Converts any audio buffer to 16kHz mono PCM WAV using ffmpeg.
- * ffmpeg writes directly to a fixed file (processing/current.wav),
- * overwriting any previous file — no manual buffering or cleanup needed.
+ * Converts an audio file on disk to 16kHz mono PCM WAV using ffmpeg.
+ * The inputPath is already on disk (written by multer diskStorage),
+ * so ffmpeg reads directly from the file — no stdin, no buffer issues.
  */
-export function convertToWav(inputBuffer: Buffer): Promise<string> {
+export function convertToWav(inputPath: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const ffmpeg = spawn('ffmpeg', [
-      '-i', 'pipe:0',         // input from stdin
+      '-i', inputPath,        // input file already on disk
       '-f', 'wav',            // output format
       '-ar', '16000',         // 16kHz sample rate
       '-ac', '1',             // mono
       '-acodec', 'pcm_s16le', // 16-bit PCM
       '-y',                   // overwrite output file without asking
-      WAV_PATH,               // write directly to fixed path
-    ], { stdio: ['pipe', 'ignore', 'pipe'] }); // ignore stdout, capture stderr for errors
+      WAV_PATH,
+    ], { stdio: ['ignore', 'ignore', 'pipe'] });
 
     const errChunks: Buffer[] = [];
     ffmpeg.stderr.on('data', (chunk: Buffer) => errChunks.push(chunk));
 
     ffmpeg.on('close', (code) => {
+      const ffmpegLog = Buffer.concat(errChunks).toString();
       if (code !== 0) {
-        const errMsg = Buffer.concat(errChunks).toString();
-        return reject(new Error(`ffmpeg exited with code ${code}: ${errMsg}`));
+        console.error('[ffmpeg] stderr:', ffmpegLog);
+        return reject(new Error(`ffmpeg exited with code ${code}: ${ffmpegLog}`));
       }
+      // Print duration line from ffmpeg output for verification
+      const durationLine = ffmpegLog.split('\n').find(l => l.includes('Duration:'));
+      if (durationLine) console.log('[ffmpeg]', durationLine.trim());
       resolve(WAV_PATH);
     });
 
     ffmpeg.on('error', (err) => reject(new Error(`Failed to start ffmpeg: ${err.message}`)));
-
-    ffmpeg.stdin.write(inputBuffer);
-    ffmpeg.stdin.end();
   });
 }
 

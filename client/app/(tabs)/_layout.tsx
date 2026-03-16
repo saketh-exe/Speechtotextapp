@@ -21,7 +21,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="library"
         options={{
-          tabBarIcon: ({ color }) => <IconSymbol name="books.fill" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol name="book.fill" size={24} color={color} />,
         }}
       />
       <Tabs.Screen

@@ -151,7 +151,7 @@ export function makeStyles(p: AppPalette) {
       elevation: 3,
     },
     transcriptionTitle: {
-      fontSize: 20,
+      fontSize: 40,
       fontWeight: 'bold',
       marginBottom: 8,
       color: p.icon,
@@ -160,6 +160,89 @@ export function makeStyles(p: AppPalette) {
       fontSize: 16,
       minHeight: 40,
       color: p.text,
+    },
+
+    // ─── Library Cards ───────────────────────────────────────────────────────
+    libraryCard: {
+      backgroundColor: p.surface,
+      borderRadius: 24,
+      padding: 16,
+      marginHorizontal: 8,
+      borderWidth: 1,
+      borderColor: p.surfaceVariant,
+      shadowColor: p.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 4,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    libraryCardContent: {
+      flex: 1,
+      paddingRight: 12,
+    },
+    libraryCardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    libraryCardTitleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+      paddingRight: 8,
+    },
+    libraryCardTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: p.text,
+      flex: 1,
+    },
+    libraryCardBody: {
+      fontSize: 14,
+      lineHeight: 22,
+      color: p.text,
+      opacity: 0.8,
+      marginBottom: 12,
+    },
+    libraryCardRight: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingLeft: 8,
+      flexShrink: 0,
+    },
+    circularPlayButton: {
+      width: 54,
+      height: 54,
+      borderRadius: 27,
+      backgroundColor: p.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexShrink: 0,
+      shadowColor: p.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 5,
+    },
+    
+    // ─── Material 3 Progress Bar ─────────────────────────────────────────────
+    m3ProgressTrack: {
+      height: 4,
+      backgroundColor: p.surfaceVariant,
+      borderRadius: 2,
+      overflow: 'hidden',
+      marginTop: 8,
+      width: '100%',
+    },
+    m3ProgressBar: {
+      height: '100%',
+      backgroundColor: p.primary,
+      borderRadius: 2,
+      width: '40%',
+      position: 'absolute',
     },
 
     // ─── Error ───────────────────────────────────────────────────────────────

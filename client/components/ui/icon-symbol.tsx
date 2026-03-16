@@ -19,12 +19,12 @@ const MAPPING = {
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right', 
   'mic.fill': 'mic',
-  'books.fill': 'library-books',
+  'book.fill': 'library-books',
   'bubble.left.fill': 'chat-bubble',
   'trash.fill': 'delete',
   'play.fill': 'play-arrow',
   'pause.fill': 'pause',
-} as IconMapping;
+} as Partial<IconMapping>;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
