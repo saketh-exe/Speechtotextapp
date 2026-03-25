@@ -10,13 +10,13 @@ import {
   Platform,
   KeyboardAvoidingView,
   Keyboard,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { makeStyles } from '../styles/HomeStyles';
 import { useNavBar } from '@/context/NavContext';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { useState, useRef, useEffect } from 'react';
-import { ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { LibraryCard } from '@/components/ui/LibraryCard';
@@ -84,6 +84,7 @@ export default function ChatScreen() {
       } else {
         let playUri = uri;
         if (Platform.OS === 'web' && uri.startsWith('idb://')) {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           const localforage = require('localforage');
           const idbKey = uri.replace('idb://', '');
           const blob: Blob | null = await localforage.getItem(idbKey);
@@ -225,10 +226,10 @@ export default function ChatScreen() {
                           link: { color: palette.primary },
                           bullet_list: { color: palette.text },
                           ordered_list: { color: palette.text },
-                          table: { borderColor: palette.outline },
-                          tr: { borderColor: palette.outline },
-                          th: { borderColor: palette.outline },
-                          td: { borderColor: palette.outline },
+                          table: { borderColor: palette.tabBarBorder },
+                          tr: { borderColor: palette.tabBarBorder },
+                          th: { borderColor: palette.tabBarBorder },
+                          td: { borderColor: palette.tabBarBorder },
                         }}
                       >
                         {msg.text}

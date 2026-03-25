@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, TouchableOpacity, ActivityIndicator, Animated, Easing, NativeSyntheticEvent, NativeScrollEvent, Platform } from 'react-native';
+import { ScrollView, Text, View, TouchableOpacity, Animated, Easing, NativeSyntheticEvent, NativeScrollEvent, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef } from 'react';
 import { IconSymbol } from '@/components/ui/icon-symbol';
