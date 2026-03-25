@@ -29,6 +29,53 @@ app.post(
   TranscribeAudio()
 );
 
+app.post('/api/chat', async (req: Request, res: Response) => {
+  const { message, transcriptions } = req.body;
+  console.log('Received chat message:', message);
+  console.log('Provided transcriptions count:', transcriptions?.length || 0);
+  
+  let contextString = "";
+  if (transcriptions && transcriptions.length > 0) {
+    contextString = transcriptions.map((item: any) => `Audio [${item.id}]: "${item.transcript}"`).join('\n');
+  }
+
+  const prompt = `You are a helpful AI assistant. Use the following collected transcripts from the user's audio recordings to answer their question. If the answer is not in the transcripts, use your general knowledge, but prioritize the transcripts if relevant. 
+
+IMPORTANT RULE: If your answer references any of the specific audio recordings provided in the context, you MUST include a structured "References" section at the very end of your response, listing exactly which audio files you used.
+
+Format it exactly like this at the end if you reference any recordings:
+---
+References:
+- Audio [filename.m4a]
+- Audio [anotherfile.wav]
+
+Transcripts context:
+${contextString}
+
+User's question: ${message}`;
+
+  try {
+    const response = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v3.2:cloud', // adjust this if you are using a different model like 'qwen', 'mistral', etc.
+        prompt: prompt,
+        stream: false
+      })
+    });
+
+    const data = await response.json();
+    
+    res.json({ success: true, message: data.response });
+  } catch (error) {
+    console.error('Error communicating with Ollama:', error);
+    res.status(500).json({ success: false, message: 'Failed to communicate with AI model.' });
+  }
+});
+
 app.get('/', (req: Request, res: Response) => {
   console.log("running")
   res.send('The speech to text API is running!');

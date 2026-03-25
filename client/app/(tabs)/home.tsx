@@ -19,7 +19,6 @@ export default function HomeScreen() {
   const [transcript, setTranscript] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [recordedUri, setRecordedUri] = useState<string | null>(null);
   const [isAvRecording, setIsAvRecording] = useState(false);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -73,7 +72,6 @@ export default function HomeScreen() {
     try {
       setError('');
       setTranscript('');
-      setRecordedUri(null);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
       const status = await AudioModule.requestRecordingPermissionsAsync();
@@ -98,26 +96,16 @@ export default function HomeScreen() {
       const uri = audioRecorder.uri;
       if (!uri) throw new Error('No URI after recording');
       audioPlayer.replace({ uri });
-      setRecordedUri(uri);
+      
+      // Auto-send to backend
+      handleSendToBackend(uri);
     } catch {
       setError('Could not stop recording.');
     }
   };
 
-  const handlePlayback = () => {
-    try {
-      if (playerStatus.playing) {
-        audioPlayer.pause();
-      } else {
-        audioPlayer.play();
-      }
-    } catch {
-      setError('Could not play recording.');
-    }
-  };
-
-  const handleSendToBackend = async () => {
-    if (!recordedUri) return;
+  const handleSendToBackend = async (uri: string) => {
+    if (!uri) return;
     const controller = new AbortController();
     // Allow up to 5 minutes — long recordings take time to transcribe on CPU
     const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
@@ -128,13 +116,13 @@ export default function HomeScreen() {
       
       let webBlob: Blob | null = null;
       if (Platform.OS === 'web') {
-        const audioResponse = await fetch(recordedUri);
+        const audioResponse = await fetch(uri);
         webBlob = await audioResponse.blob();
         const file = new File([webBlob], 'recording.m4a', { type: webBlob.type || 'audio/m4a' });
         formData.append('audio', file);
       } else {
         formData.append('audio', {
-          uri: recordedUri,
+          uri: uri,
           name: 'recording.m4a',
           type: 'audio/m4a',
         } as any);
@@ -172,7 +160,7 @@ export default function HomeScreen() {
 
         const destination = new ExpoFile(directory, fileName);
        
-        const source = new ExpoFile(recordedUri)
+        const source = new ExpoFile(uri)
         source.copy(destination)
 
         temp.push({ uri: destination.uri, transcript: data.transcript });
@@ -193,7 +181,6 @@ export default function HomeScreen() {
       */
       
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(temp));
-      setRecordedUri(null);
     } catch (err: any) {
       if (err?.name === 'AbortError') {
         setError('Transcription timed out. Try a shorter recording.');
@@ -205,13 +192,6 @@ export default function HomeScreen() {
       clearTimeout(timeoutId);
       setIsLoading(false);
     }
-  };
-
-  const handleDiscard = () => {
-    audioPlayer.pause();
-    setRecordedUri(null);
-    setTranscript('');
-    setError('');
   };
 
   return (
@@ -258,55 +238,6 @@ export default function HomeScreen() {
               >
                 <IconSymbol name="mic.fill" size={62} color={palette.background} />
               </TouchableOpacity>
-            </View>
-          )}
-
-          {recordedUri && !isAvRecording && (
-            <View style={S.previewContainer}>
-              <Text style={[S.previewLabel, S.textColor]}>
-                Listen before sending
-              </Text>
-              <View style={S.previewButtons}>
-                <TouchableOpacity
-                  style={[S.previewButton, S.playButton]}
-                  onPress={handlePlayback}
-                  activeOpacity={0.8}
-                >
-                  <IconSymbol
-                    name={playerStatus.playing ? 'pause.fill' : 'play.fill'}
-                    size={20}
-                    color= {palette.icon}
-                  />
-                  <Text style={S.previewButtonText}>
-                    {playerStatus.playing ? 'Pause' : 'Play'}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[S.previewButton, S.sendButton]}
-                  onPress={handleSendToBackend}
-                  disabled={isLoading}
-                  activeOpacity={0.8}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color={palette.icon} />
-                  ) : (
-                    <IconSymbol name="paperplane.fill" size={20} color={palette.icon} />
-                  )}
-                  <Text style={S.previewButtonText}>
-                    {isLoading ? 'Sending...' : 'Send'}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[S.previewButton, S.discardButton]}
-                  onPress={handleDiscard}
-                  activeOpacity={0.8}
-                >
-                  <IconSymbol name="trash.fill" size={20} color={palette.danger} />
-                  <Text style={S.previewButtonText}>Discard</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           )}
         </View>

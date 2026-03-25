@@ -11,6 +11,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { File } from 'expo-file-system';
 import { M3ProgressBar } from '@/components/ui/M3ProgressBar';
 import { Platform } from 'react-native';
+import { LibraryCard } from '@/components/ui/LibraryCard';
 
 const STORAGE_KEY = 'AUDIO_AND_TRANSCRIPTIONS';
 
@@ -173,58 +174,19 @@ export default function LibraryScreen() {
                 const isItemActive = currentPlayingUri === item.uri;
                 const playbackProgress = status.duration > 0 ? status.currentTime / status.duration : 0;
                 
-                // M3 style waveform bars - animate or just random statical heights per card
-
                 return (
-                <View key={`${item.uri}-${index}`} style={S.libraryCard}>
-                  {/* Left Content Area */}
-                  <View style={S.libraryCardContent}>
-                    
-                    <View style={S.libraryCardHeader}>
-                      <View style={S.libraryCardTitleContainer}>
-                        <IconSymbol name="mic.fill" size={18} color={palette.primary} style={{ marginRight: 8 }} />
-                        <Text style={S.libraryCardTitle} numberOfLines={1}>
-                          {item.uri.split('/').pop()?.split('.')[0] || `Recording ${index + 1}`}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => handleDelete(index)}
-                        activeOpacity={0.7}
-                        style={{ padding: 4 }}
-                      >
-                        <IconSymbol name="trash.circle.fill" size={24} color={palette.danger} />
-                      </TouchableOpacity>
-                    </View>
-                    
-                    <Text style={S.libraryCardBody} numberOfLines={2}>
-                      {item.transcript || '(No transcript)'}
-                    </Text>
-
-                    {/* Material 3 Linear Progress Indicator */}
-                    <M3ProgressBar 
-                      progress={isItemActive ? playbackProgress : 0} 
-                      activeColor={palette.primary}
-                      trackColor={palette.surfaceVariant}
-                      isPlaying={isItemPlaying}
-                    />
-                  </View>
-
-                  {/* Right Play Button Area */}
-                  <View style={S.libraryCardRight}>
-                    <TouchableOpacity
-                      style={S.circularPlayButton}
-                      onPress={() => handlePlayback(item.uri)}
-                      activeOpacity={0.8}
-                    >
-                      <IconSymbol
-                        name={isItemPlaying ? 'pause.fill' : 'play.fill'}
-                        size={24}
-                        color={palette.background}
-                      />
-                    </TouchableOpacity>
-                  </View>
-
-                </View>
+                  <LibraryCard
+                    key={`${item.uri}-${index}`}
+                    item={item}
+                    index={index}
+                    palette={palette}
+                    S={S}
+                    isItemPlaying={isItemPlaying}
+                    isItemActive={isItemActive}
+                    playbackProgress={playbackProgress}
+                    handlePlayback={handlePlayback}
+                    handleDelete={() => handleDelete(index)}
+                  />
                 );
               })}
             </View>
