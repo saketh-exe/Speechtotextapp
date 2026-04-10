@@ -10,7 +10,7 @@ import { useAppTheme } from '@/hooks/useAppTheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Directory,Paths, File as ExpoFile} from 'expo-file-system';
 
-const BACKEND_URL = 'http://192.168.0.100:3000/api/speech-to-text/';
+const BACKEND_URL = 'http://10.29.114.1:3000/api/speech-to-text/';
 const STORAGE_KEY = 'AUDIO_AND_TRANSCRIPTIONS';
 export default function HomeScreen() {
   const { setIsScrolled } = useNavBar();

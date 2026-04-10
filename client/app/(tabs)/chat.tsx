@@ -134,7 +134,7 @@ export default function ChatScreen() {
         }
       }
 
-      const response = await fetch('http://192.168.0.100:3000/api/chat', {
+      const response = await fetch('http://10.29.114.1:3000/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userText, transcriptions }),

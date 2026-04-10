@@ -43,15 +43,6 @@ export function LibraryCard({
               {displayTitle}
             </Text>
           </View>
-          {!hideDelete && handleDelete && (
-            <TouchableOpacity
-              onPress={() => handleDelete(index)}
-              activeOpacity={0.7}
-              style={{ padding: 4 }}
-            >
-              <IconSymbol name="trash.circle.fill" size={24} color={palette.danger} />
-            </TouchableOpacity>
-          )}
         </View>
         
         <Text style={S.libraryCardBody} numberOfLines={2}>
@@ -67,8 +58,8 @@ export function LibraryCard({
         />
       </View>
 
-      {/* Right Play Button Area */}
-      <View style={S.libraryCardRight}>
+      {/* Right Actions Area */}
+      <View style={[S.libraryCardRight, { flexDirection: 'row', gap: 12 }]}>
         <TouchableOpacity
           style={S.circularPlayButton}
           onPress={() => handlePlayback(item.uri)}
@@ -80,6 +71,15 @@ export function LibraryCard({
             color={palette.background}
           />
         </TouchableOpacity>
+        {!hideDelete && handleDelete && (
+          <TouchableOpacity
+            onPress={() => handleDelete(index)}
+            activeOpacity={0.7}
+            style={{ padding: 4 }}
+          >
+            <IconSymbol name="trash.fill" size={24} color={palette.danger} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
